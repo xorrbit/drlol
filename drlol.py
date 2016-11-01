@@ -12,7 +12,8 @@ allowed_maps = {
   'miami-lights',
   'bell-labs',
   'lapocalypse',
-  'gates-of-hell'
+  'gates-of-hell',
+  'straight-line'
 }
 
 drl_map = cgi.FieldStorage().getvalue('map')
