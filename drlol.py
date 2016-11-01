@@ -7,6 +7,7 @@ import requests_cache
 import json
 from collections import OrderedDict
 import cgi
+from filelock import FileLock
 
 allowed_maps = {
   'miami-lights',
@@ -34,12 +35,12 @@ if not drl_map in allowed_maps:
   sys.exit(0)
 
 config = configparser.ConfigParser()
-config.read("drlol.conf")
+config.read('drlol.conf')
 username = config['drlol']['username']
 password = config['drlol']['password']
 cache_time = timedelta(seconds=int(config['drlol']['cache_time']))
 
-requests_cache.install_cache('drlol', backend='sqlite', allowable_methods=('GET', 'POST'), expire_after=cache_time)
+requests_cache.install_cache('drlol', backend='redis', allowable_methods=('GET', 'POST'), expire_after=cache_time)
 
 login_url = 'https://F67D.playfabapi.com/Client/LoginWithPlayFab'
 login_headers = {
@@ -62,7 +63,10 @@ login_payload = {
 }
 login_payload = OrderedDict(sorted(login_payload.items()))
 
-r = requests.post(login_url, headers=login_headers, data=json.dumps(login_payload))
+
+with FileLock("login.lock"):
+	r = requests.post(login_url, headers=login_headers, data=json.dumps(login_payload))
+
 r = r.json()
 session_ticket = r['data']['SessionTicket']
 
@@ -86,6 +90,7 @@ leaderboard_payload = {
 leaderboard_payload = OrderedDict(sorted(leaderboard_payload.items()))
 
 r = requests.post(leaderboard_url, headers=leaderboard_headers, data=json.dumps(leaderboard_payload))
+cached = r.from_cache
 r = r.json()
 
 print("Content-Type: application/json")
