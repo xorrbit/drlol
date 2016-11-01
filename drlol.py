@@ -6,6 +6,31 @@ import requests
 import requests_cache
 import json
 from collections import OrderedDict
+import cgi
+
+allowed_maps = {
+  'miami-lights',
+  'bell-labs',
+  'lapocalypse',
+  'gates-of-hell'
+}
+
+drl_map = cgi.FieldStorage().getvalue('map')
+
+if drl_map is None:
+  print('Content-Type: application/json')
+  print()
+  print('{"code": 200, "maps": [\n"', end='')
+  print('",\n"'.join(allowed_maps), end='')
+  print('"')
+  print(']}')
+  sys.exit(0)
+
+if not drl_map in allowed_maps:
+  print('Content-Type: application/json')
+  print()
+  print('{"code":404, "nope":true}')
+  sys.exit(0)
 
 config = configparser.ConfigParser()
 config.read("drlol.conf")
