@@ -90,7 +90,6 @@ leaderboard_payload = {
 leaderboard_payload = OrderedDict(sorted(leaderboard_payload.items()))
 
 r = requests.post(leaderboard_url, headers=leaderboard_headers, data=json.dumps(leaderboard_payload))
-cached = r.from_cache
 r = r.json()
 
 print("Content-Type: application/json")
