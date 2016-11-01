@@ -76,19 +76,19 @@ leaderboard_headers = {
 }
 leaderboard_headers = OrderedDict(sorted(leaderboard_headers.items()))
 # anything over 99 gives back an error ¯\_(ツ)_/¯
+drl_map_full = 'SP.RC.' + drl_map + '.race.TotalTime'
 leaderboard_payload = {
-  'StatisticName': 'SP.RC.miami-lights.race.TotalTime',
+  'StatisticName': drl_map_full,
   'StartPosition': 0,
   'MaxResultsCount': 99
 }
 leaderboard_payload = OrderedDict(sorted(leaderboard_payload.items()))
 
 r = requests.post(leaderboard_url, headers=leaderboard_headers, data=json.dumps(leaderboard_payload))
-cached = r.from_cache
 r = r.json()
 
 print("Content-Type: application/json")
 print()
 
-print(r)
+print(json.dumps(r))
 
