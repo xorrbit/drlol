@@ -9,7 +9,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/3.3.2/js/bootstrap-switch.min.js"></script>
 
 <script>
-// names of locals
 var teamLeaderboard = ['Highway11','Crust','xorrbit','Armand9x'];
 var maps = ["gates-of-hell","miami-lights","lapocalypse","bell-labs","straight-line"];
 var allTables = "";
@@ -27,7 +26,7 @@ function msToTime(s) {
   var mins = s % 60;
   var hrs = (s - mins) / 60;
 
-  return  mins + ':' + ("00" + secs).substr(-2,2) + '.' + ms;
+  return  mins + ':' + ("00" + secs).substr(-2,2) + '.' + ('00' + ms).slice(-3);
 }
 
 function isWinnipegFPV(nameToCheck) {
@@ -58,12 +57,10 @@ function generateTable(map) {
 	tableHtml = "";
 	tableHtml += "<table class='table' style='max-width:500px'>";
 	tableHtml += "<tbody>";
-	tableHtml += "<tr data-toggle='collapse' data-target='#accordion-" + map + "' class='clickable'>";
-	tableHtml += "<th colspan=3 style='cursor:hand'>" + convertMapToTitle(map) + " > </th>";
-	tableHtml +=  "</tr>";
 	tableHtml += "<tr>";
-    tableHtml += "<td colspan='3'>"
-    tableHtml += "<div id='accordion-" + map + "' class='collapse'><table  class='table table-condensed table-hover' style='max-width:500px'>";
+	tableHtml += "<th data-toggle='collapse' data-target='#accordion-" + map + "' class='clickable' colspan=3 style='cursor:hand'>" + convertMapToTitle(map) + "</th></tr>";
+    tableHtml += "<tr><td colspan='3'>"
+    tableHtml += "<div style='margin-left:20px' id='accordion-" + map + "' class='collapse in'><table  class='table table-condensed table-hover' style='max-width:500px'>";
 	tableHtml += "<thead><tr><th colspan=4><input type='checkbox' name='' class='toggleCheckbox' checked data-map='" + map + "' data-on-text='Local' data-off-text='Global'></th>";
 	tableHtml += "<tr><th>Local<br>Rank<th>Global<br>Rank<th>Name <th>Time</thead><tbody id='" + map + "'></tbody></table></div>";
     tableHtml += "</td>"
@@ -71,7 +68,6 @@ function generateTable(map) {
     tableHtml += "</tbody>";
     tableHtml += "</table>";
 	
-	//$("#body").html(tableHtml);
 	return tableHtml;
 }
 
@@ -128,7 +124,7 @@ $( document ).ready(function() {
 </script>
 
 <body>
-<a href="http://thedroneracingleague.com/simulator/download/">Download DRL Simulator Here</a><br/><br/>
+<a href="http://thedroneracingleague.com/simulator/download/" target="_blank">Download DRL Simulator Here</a><br/><br/>
 <a href="https://gist.github.com/xorrbit/18eadf02703cb64619758b4175343bbf" target="_blank">DRL Autohotkey Script</a><br/><br/>
 </body>
 
