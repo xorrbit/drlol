@@ -11,11 +11,14 @@
 <script>
 var teamLeaderboard = ['Highway11','Crust','xorrbit','Armand9x'];
 var maps = ["gates-of-hell","miami-lights","lapocalypse","bell-labs","straight-line"];
+var numMaps = 5;
+var mapsRetrieved = 0;
 var allTables = "";
+var pilots = {};
 
 function getTime(value) {
  time = 999999999 - parseInt(value)
- return  msToTime(time);
+ return  (time);
 }
 
 function msToTime(s) {
@@ -72,6 +75,49 @@ function generateTable(map) {
 	return tableHtml;
 }
 
+function generateCumulativeLeaderboard() {
+	//create array of all pilots that have completed 4 maps 
+	cumulativePilots = [];
+	$.each(pilots, function( index, value ) {
+		//console.log( index + ": " + value["mapCount"] );
+		
+		if (value.mapCount == 4)
+			{
+				cumulativePilots.push({name:index, cumulativeTime:value.cumulativeTime});
+			}
+	});
+	
+	//sort array of pilots by time
+	cumulativePilots.sort(function(a, b) {
+		return parseFloat(a.cumulativeTime) - parseFloat(b.cumulativeTime);
+	});
+	
+	teamMemberCount = 0;
+	count = 1;
+	entries = [];
+	//generate table row for each pilot
+	cumulativePilots.forEach( function (item)
+	{
+		if (isWinnipegFPV(item.name))
+		{
+			teamMemberCount += 1;
+			tableRow = "<tr class = 'success local-cumulative'><td>" + teamMemberCount;
+		}
+		else
+		{
+			tableRow = "<tr class='global-cumulative' style='display:none'><td>&nbsp;";
+		}
+		
+		tableRow += " <td> " + count +  "<td>" + item.name + "<td>" + msToTime(item.cumulativeTime) + "</tr>";
+		entries.push( tableRow );
+		count += 1;
+	});
+	
+	$('#cumulative').html(entries.join(""));
+	$('#cumulative-total-entries' ).html("" + cumulativePilots.length + " pilots");
+
+}
+
 $( document ).ready(function() {
 	//generate a table for each map in the array
 	maps.forEach(function (map) {
@@ -109,10 +155,30 @@ $( document ).ready(function() {
 					tableRow = "<tr class='global-" + map + "' style='display:none'><td>&nbsp;";
 				}
 				
+				//add all times to cumulative leaderboard except straight-line
+				if (map != 'straight-line')
+				{
+					if (typeof(pilots[item.DisplayName]) === "undefined")
+					{
+						pilots[item.DisplayName] = {};
+					}
+					
+					if (pilots[item.DisplayName]["mapCount"])
+					{
+						pilots[item.DisplayName]["mapCount"] += 1;
+						pilots[item.DisplayName]["cumulativeTime"] += getTime(item.StatValue);
+					}
+					else
+					{
+						pilots[item.DisplayName]["mapCount"] = 1;
+						pilots[item.DisplayName]["cumulativeTime"] = getTime(item.StatValue);
+					}
+				}
+			
 				rank = (parseInt(item.Position) + 1);
 				percentRank = parseInt(((1 - ((totalEntries - rank) / totalEntries)) * 100))
 				
-				tableRow += " <td> " + rank + "<td>" + percentRank + "%<td>" + item.DisplayName + "<td>" + getTime(item.StatValue) + "</tr>";
+				tableRow += " <td> " + rank + "<td>" + percentRank + "%<td>" + item.DisplayName + "<td>" + msToTime(getTime(item.StatValue)) + "</tr>";
 				entries.push( tableRow );
 				
 			});
@@ -121,10 +187,21 @@ $( document ).ready(function() {
 			$('#' + map ).html(entries.join(""));
 			$('#' + map + '-total-entries' ).html("" + totalEntries + " pilots");
 			$('#loading-' + map ).hide();
-
+			
+			//generate cumulative leaderboard once all map leaderboards have been generated
+			mapsRetrieved += 1;
+			if (mapsRetrieved == numMaps)
+			{
+				generateCumulativeLeaderboard();
+			}
+	
 		});
 
 	});
+	
+	
+	
+	
 });
 
 </script>
@@ -132,6 +209,20 @@ $( document ).ready(function() {
 <body>
 <a href="http://thedroneracingleague.com/simulator/download/" target="_blank">Download DRL Simulator Here</a><br/><br/>
 <a href="https://gist.github.com/xorrbit/18eadf02703cb64619758b4175343bbf" target="_blank">DRL Autohotkey Script</a><br/><br/>
+<table class='table' style='max-width:500px'>
+	<tbody>
+	<tr>
+	<th data-toggle='collapse' data-target='#accordion-cumulative' class='clickable' colspan=3 style='cursor:hand'> Cumulative (all maps except straight-line) <div id='cumulative-total-entries' style='color:#777;font-size:12px;font-style:italic;float:right'></div></th></tr>
+    <tr><td colspan='3'>
+    <div style='margin-left:20px' id='accordion-cumulative' class='collapse in'><table  class='table table-condensed table-hover' style='max-width:500px'>
+	<thead><tr><th colspan=5><input type='checkbox' name='' class='toggleCheckbox' checked data-map='cumulative' data-on-text='Local' data-off-text='Global'></th>
+	<tr><th>Local<br>Rank<th>Global<br>Rank<th>Name <th>Time</thead><tbody id='cumulative'></tbody></table></div>
+    </td>
+    </tr>
+	
+    </tbody>
+    </table>
+
 </body>
 
  
