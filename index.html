@@ -58,13 +58,14 @@ function generateTable(map) {
 	tableHtml += "<table class='table' style='max-width:500px'>";
 	tableHtml += "<tbody>";
 	tableHtml += "<tr>";
-	tableHtml += "<th data-toggle='collapse' data-target='#accordion-" + map + "' class='clickable' colspan=3 style='cursor:hand'>" + convertMapToTitle(map) + "</th></tr>";
+	tableHtml += "<th data-toggle='collapse' data-target='#accordion-" + map + "' class='clickable' colspan=3 style='cursor:hand'>" + convertMapToTitle(map) + "<div id='" + map + "-total-entries' style='color:#777;font-size:12px;font-style:italic;float:right'></div></th></tr>";
     tableHtml += "<tr><td colspan='3'>"
     tableHtml += "<div style='margin-left:20px' id='accordion-" + map + "' class='collapse in'><table  class='table table-condensed table-hover' style='max-width:500px'>";
-	tableHtml += "<thead><tr><th colspan=4><input type='checkbox' name='' class='toggleCheckbox' checked data-map='" + map + "' data-on-text='Local' data-off-text='Global'></th>";
-	tableHtml += "<tr><th>Local<br>Rank<th>Global<br>Rank<th>Name <th>Time</thead><tbody id='" + map + "'></tbody></table></div>";
+	tableHtml += "<thead><tr><th colspan=5><input type='checkbox' name='' class='toggleCheckbox' checked data-map='" + map + "' data-on-text='Local' data-off-text='Global'></th>";
+	tableHtml += "<tr><th>Local<br>Rank<th>Global<br>Rank<th>Top %<th>Name <th>Time</thead><tbody id='" + map + "'></tbody></table></div>";
     tableHtml += "</td>"
     tableHtml += "</tr>";
+	tableHtml += "<tr id='loading-" + map + "'><td colspan=5 style='text-align:center'><img src='https://i1.wp.com/cdnjs.cloudflare.com/ajax/libs/galleriffic/2.0.1/css/loader.gif'></td></tr>";
     tableHtml += "</tbody>";
     tableHtml += "</table>";
 	
@@ -90,11 +91,12 @@ $( document ).ready(function() {
 		var teamMemberCount = 0;
 		var entries = [];
 	
-		url = "drlol.py?map=" + map;
+		url = "http://winnipegfpv.club/drl/drlol.py?map=" + map;
 		$.getJSON( url, function( data ) 
 		{
 		
 			obj = data;
+			totalEntries = obj["data"]["Leaderboard"].length;
 			obj["data"]["Leaderboard"].forEach( function (item)
 			{
 				if (isWinnipegFPV(item.DisplayName))
@@ -107,14 +109,18 @@ $( document ).ready(function() {
 					tableRow = "<tr class='global-" + map + "' style='display:none'><td>&nbsp;";
 				}
 				
-				tableRow += " <td> " + (parseInt(item.Position) + 1) + "<td>" + item.DisplayName + "<td>" + getTime(item.StatValue) + "</tr>";
+				rank = (parseInt(item.Position) + 1);
+				percentRank = parseInt(((1 - ((totalEntries - rank) / totalEntries)) * 100))
+				
+				tableRow += " <td> " + rank + "<td>" + percentRank + "%<td>" + item.DisplayName + "<td>" + getTime(item.StatValue) + "</tr>";
 				entries.push( tableRow );
 				
 			});
 
 			//add the table rows to the table for this map
 			$('#' + map ).html(entries.join(""));
-
+			$('#' + map + '-total-entries' ).html("" + totalEntries + " pilots");
+			$('#loading-' + map ).hide();
 
 		});
 
