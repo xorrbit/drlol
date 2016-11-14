@@ -10,8 +10,8 @@
 
 <script>
 var teamLeaderboard = ['Highway11','Crust','xorrbit','Armand9x'];
-var maps = ["gates-of-hell","miami-lights","lapocalypse","bell-labs","straight-line"];
-var numMaps = 5;
+var maps = ["gates-of-hell","miami-lights","lapocalypse","bell-labs","campaign","bud-light-2017-tryouts"];
+var numMaps = 6;
 var mapsRetrieved = 0;
 var allTables = "";
 var pilots = {};
@@ -137,7 +137,7 @@ $( document ).ready(function() {
 		var teamMemberCount = 0;
 		var entries = [];
 	
-		url = "http://winnipegfpv.club/drl/drlol.py?map=" + map;
+		url = "/drl/drlol.py?map=" + map;
 		$.getJSON( url, function( data ) 
 		{
 		
@@ -155,8 +155,8 @@ $( document ).ready(function() {
 					tableRow = "<tr class='global-" + map + "' style='display:none'><td>&nbsp;";
 				}
 				
-				//add all times to cumulative leaderboard except straight-line
-				if (map != 'straight-line')
+				//add all times to cumulative leaderboard (except campaign and bud-light-2017)
+				if (map != 'campaign' && map != 'bud-light-2017-tryouts')
 				{
 					if (typeof(pilots[item.DisplayName]) === "undefined")
 					{
@@ -174,7 +174,7 @@ $( document ).ready(function() {
 						pilots[item.DisplayName]["cumulativeTime"] = getTime(item.StatValue);
 					}
 				}
-			
+
 				rank = (parseInt(item.Position) + 1);
 				percentRank = parseInt(((1 - ((totalEntries - rank) / totalEntries)) * 100))
 				
@@ -212,7 +212,7 @@ $( document ).ready(function() {
 <table class='table' style='max-width:500px'>
 	<tbody>
 	<tr>
-	<th data-toggle='collapse' data-target='#accordion-cumulative' class='clickable' colspan=3 style='cursor:hand'> Cumulative (all maps except straight-line) <div id='cumulative-total-entries' style='color:#777;font-size:12px;font-style:italic;float:right'></div></th></tr>
+	<th data-toggle='collapse' data-target='#accordion-cumulative' class='clickable' colspan=3 style='cursor:hand'> Cumulative (all maps) <div id='cumulative-total-entries' style='color:#777;font-size:12px;font-style:italic;float:right'></div></th></tr>
     <tr><td colspan='3'>
     <div style='margin-left:20px' id='accordion-cumulative' class='collapse in'><table  class='table table-condensed table-hover' style='max-width:500px'>
 	<thead><tr><th colspan=5><input type='checkbox' name='' class='toggleCheckbox' checked data-map='cumulative' data-on-text='Local' data-off-text='Global'></th>

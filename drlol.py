@@ -9,12 +9,17 @@ from collections import OrderedDict
 import cgi
 from filelock import FileLock
 
+# store our config somewhere safe :)
+path = '../../'
+redis_store = 'drlol'
+
 allowed_maps = {
   'miami-lights',
   'bell-labs',
   'lapocalypse',
   'gates-of-hell',
-  'straight-line'
+  'campaign',
+  'bud-light-2017-tryouts'
 }
 
 drl_map = cgi.FieldStorage().getvalue('map')
@@ -35,16 +40,17 @@ if not drl_map in allowed_maps:
   sys.exit(0)
 
 config = configparser.ConfigParser()
-config.read('drlol.conf')
+config.read(path + 'drlol.conf')
 username = config['drlol']['username']
 password = config['drlol']['password']
 cache_time = timedelta(seconds=int(config['drlol']['cache_time']))
 
-requests_cache.install_cache('drlol', backend='redis', allowable_methods=('GET', 'POST'), expire_after=cache_time)
+requests_cache.install_cache(redis_store, backend='redis', allowable_methods=('GET', 'POST'), expire_after=cache_time)
 
-login_url = 'https://F67D.playfabapi.com/Client/LoginWithPlayFab'
+title_id = "891F"
+login_url = 'https://' + title_id + '.playfabapi.com/Client/LoginWithPlayFab'
 login_headers = {
-  'Host': 'F67D.playfabapi.com',
+  'Host': title_id + '.playfabapi.com',
   'User-Agent': 'UnityPlayer/5.4.0f3 (http://unity3d.com)',
   'Accept': '*/*',
   'Accept-Encoding': 'identity',
@@ -56,7 +62,7 @@ login_headers = {
 # if we don't order these, caching doesn't work as python dicts have aribtrary order
 login_headers = OrderedDict(sorted(login_headers.items()))
 login_payload = {
-  'TitleId': 'F67D',
+  'TitleId': title_id,
   'Username': username,
   'Password': password,
   'InfoRequestParameters': 'null'
@@ -70,9 +76,9 @@ with FileLock("login.lock"):
 r = r.json()
 session_ticket = r['data']['SessionTicket']
 
-leaderboard_url = 'https://F67D.playfabapi.com/Client/GetLeaderBoard'
+leaderboard_url = 'https://' + title_id + '.playfabapi.com/Client/GetLeaderBoard'
 leaderboard_headers = {
-  'Host': 'F67D.playfabapi.com',
+  'Host': title_id + '.playfabapi.com',
   'Content-Type': 'application/json',
   'X-Authorization': session_ticket,
   'X-PlayFabSDK': 'UnitySDK-2.5.160815',
@@ -80,8 +86,15 @@ leaderboard_headers = {
   'X-Unity-Version': '5.4.0f3'
 }
 leaderboard_headers = OrderedDict(sorted(leaderboard_headers.items()))
+
+if drl_map == 'campaign':
+  drl_map_full = 'SP.CP.TotalTime'
+elif drl_map == 'bud-light-2017-tryouts':
+  drl_map_full = 'SP.TO.A21.TotalTime'
+else:
+  drl_map_full = 'SP.RC.' + drl_map + '.race.TotalTime'
+
 # anything over 99 gives back an error ¯\_(ツ)_/¯
-drl_map_full = 'SP.RC.' + drl_map + '.race.TotalTime'
 leaderboard_payload = {
   'StatisticName': drl_map_full,
   'StartPosition': 0,
