@@ -8,6 +8,7 @@ import json
 from collections import OrderedDict
 import cgi
 from filelock import FileLock
+from jsonmerge import merge, Merger
 
 # store our config somewhere safe :)
 path = '../../'
@@ -94,19 +95,29 @@ elif drl_map == 'bud-light-2017-tryouts':
 else:
   drl_map_full = 'SP.RC.' + drl_map + '.race.TotalTime'
 
-# anything over 99 gives back an error ¯\_(ツ)_/¯
-leaderboard_payload = {
-  'StatisticName': drl_map_full,
-  'StartPosition': 0,
-  'MaxResultsCount': 99
-}
-leaderboard_payload = OrderedDict(sorted(leaderboard_payload.items()))
+# magic
+schema = { 'properties': { 'data': { 'properties': { 'Leaderboard': { 'mergeStrategy': 'append' }}}}}
+merger = Merger(schema)
 
-r = requests.post(leaderboard_url, headers=leaderboard_headers, data=json.dumps(leaderboard_payload))
-r = r.json()
+full_leaderboard = None
+start_position = 0
+pilots = 99
+while (pilots == 99):
+	# anything over 99 gives back an error ¯\_(ツ)_/¯
+	leaderboard_payload = {
+	  'StatisticName': drl_map_full,
+	  'StartPosition': start_position,
+	  'MaxResultsCount': 99
+	}
+	leaderboard_payload = OrderedDict(sorted(leaderboard_payload.items()))
+	r = requests.post(leaderboard_url, headers=leaderboard_headers, data=json.dumps(leaderboard_payload))
+	r = r.json()
+	full_leaderboard = merger.merge(full_leaderboard, r)
+	start_position = start_position + 99
+	pilots = len(r['data']['Leaderboard'])
 
 print("Content-Type: application/json")
 print()
 
-print(json.dumps(r))
+print(json.dumps(full_leaderboard))
 
