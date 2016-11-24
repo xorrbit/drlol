@@ -1,0 +1,337 @@
+<html>
+<head>
+<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/3.3.2/css/bootstrap2/bootstrap-switch.min.css" />
+<link rel="stylesheet" href="https://cdn.datatables.net/1.10.12/css/jquery.dataTables.min.css" />
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/1.2.2/css/buttons.dataTables.min.css" />
+
+<script src="https://code.jquery.com/jquery-3.1.1.min.js"
+  integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
+  crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/3.3.2/js/bootstrap-switch.min.js"></script>
+<script src="https://cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/1.2.2/js/dataTables.buttons.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/1.2.2/js/buttons.colVis.min.js"></script>
+
+
+<style>
+ .leftBorder {
+  border-left: 1px solid #ccc;
+}
+.top {
+ color:grey;
+}
+table.dataTable tbody td {
+    padding: 4px 5px;
+	font-size: 14px;
+}
+table.dataTable thead th, table.dataTable thead td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #111;
+	font-size: 14px;
+}
+table.dataTable.display tbody tr:hover {
+    background-color: #DFF0D8;
+}
+</style>
+
+
+<script>
+var teamLeaderboard = ['Highway11','Crust','xorrbit','Armand9x','vayerlaze'];
+var maps = ["gates-of-hell","miami-lights","lapocalypse","bell-labs","bud-light-2017-tryouts"];
+var colors = ["#4EC2F7","#F77B71","#EF6191","#B967C7","#7884CB","#81C784","#FFB64C"];
+var mapsRetrieved = 0;
+var allTables = "";
+var pilots = {};
+var cumulativePilots = [];
+
+
+function getTime(value) {
+ time = 999999999 - parseInt(value)
+ return  (time);
+}
+
+function msToTime(s) {
+  var ms = s % 1000;
+  s = (s - ms) / 1000;
+  var secs = s % 60;
+  s = (s - secs) / 60;
+  var mins = s % 60;
+  var hrs = (s - mins) / 60;
+
+  return  mins + ':' + ("00" + secs).substr(-2,2) + '.' + ('00' + ms).slice(-3);
+}
+
+function isWinnipegFPV(nameToCheck) {
+//check to see if this leaderboard entry is part of the local leaderboard
+    isTeamMember = false;
+	teamLeaderboard.forEach(function (name) {
+		if (name == nameToCheck)
+		{
+			isTeamMember = true;
+		}
+		
+	});
+	return isTeamMember;
+}
+
+function convertMapToTitle(map) {
+	//capitalize first letter of each word
+	title = map.toLowerCase().replace(/\b[a-z]/g, function(letter) {
+		return letter.toUpperCase();
+	});
+	//replace - with a space
+	title = title.replace(/-/g, ' ');
+	return title;
+}
+
+
+
+function generateCumulativeLeaderboard() {
+	//create array of all pilots that have completed 4 maps 
+	
+	$.each(pilots, function( index, value ) {
+		//console.log( index + ": " + value["mapCount"] );
+		
+		if (value.mapCount == 4)
+			{
+				cumulativePilots.push({name:index, cumulativeTime:value.cumulativeTime});
+			}
+	});
+	
+	//sort array of pilots by time
+	cumulativePilots.sort(function(a, b) {
+		return parseFloat(a.cumulativeTime) - parseFloat(b.cumulativeTime);
+	});
+	
+	teamMemberCount = 0;
+	count = 1;
+	entries = [];
+	//generate table row for each pilot
+	cumulativePilots.forEach( function (item)
+	{
+		pilots[item.name]["cumulativeRank"] = count;
+		
+		
+		count += 1;
+	});
+	
+	
+
+}
+
+function generateTableHeader() {
+	tableHeader1 = "<tr><th rowspan=2>Name<div style='color:#777;font-size:12px;font-style:italic;float:right;margin-right:10px;' id='total-pilots'></div></th>";
+	tableHeader2 = "<tr>";
+	count = 0;
+	maps.forEach(function (map) {
+		tableHeader1 += "<th colspan=3 class='leftBorder' style='color:" + colors[count] + "'>" + convertMapToTitle(map) +  "<div style='color:#777;font-size:12px;font-style:italic;float:right;margin-right:2px;' id='" + map + "-total-entries'></div></th>";
+		tableHeader2 += "<th class='leftBorder " + map + "'>Rank</th><th class='" + map + "'>Time</th><th class='" + map + "'>Top</th>";
+		count += 1;
+	});
+	tableHeader1 += "<th colspan=3 class='leftBorder'>Cumulative<div style='color:#777;font-size:12px;font-style:italic;float:right;margin-right:2px;' id='cumulative-total-entries'></div></tr>";
+	tableHeader2 += "<th class='leftBorder cumulative'>Rank</th><th class='cumulative'>Time</th><th class='cumulative'>Potential Tryout</th></tr>";
+	$('#header').html(tableHeader1 + tableHeader2);
+
+
+}
+
+function generateTable() {
+	
+	rows = [];
+	
+	$.each(pilots, function( name, pilot ) {
+		//console.log( index + ": " + value["mapCount"] );
+		tableRow = "<tr><td>" + name + "</td>" ;
+		count = 0;
+		maps.forEach(function (map) {
+			
+			if (pilot[map]) {
+				tableRow += "<td class='leftBorder' style='color:" + colors[count] + "'> " + pilot[map]["rank"] + "<td>" + pilot[map]["time"] + "<td class='top'>" + pilot[map]["percentRank"] + "%</td>";
+			}
+			else
+			{
+				tableRow += "<td class='leftBorder'><span style='opacity:.001'>9999</style></td><td>&nbsp;<td>&nbsp";
+			}
+			
+			count += 1;
+		});
+		if (pilot['mapCount'] == 4)
+		{
+			tableRow += "<td class='leftBorder'>" + pilot.cumulativeRank + "<td>" + msToTime(pilot.cumulativeTime) + "</td>" + "<td>" + msToTime(pilot.cumulativeTime * 4) ;
+		}
+		else
+		{
+			tableRow += "<td class='leftBorder'><span style='opacity:.001'>99999</span></td><td>&nbsp;</td><td>&nbsp;</td>";
+		}
+		tableRow += "</tr>";
+		rows.push(tableRow);
+		
+		
+		
+	});
+	
+	$('#pilots').html(rows.join(""));
+	$('#pilots-total-entries' ).html("" + count + " pilots");
+
+
+}
+
+
+$( document ).ready(function() {
+	
+	generateTableHeader();
+	
+	//retrieve leaderboard json for each map
+	maps.forEach(function (map) {
+		var teamMemberCount = 0;
+		var entries = [];
+	
+		url = "http://winnipegfpv.club/drl/drlol.py?map=" + map;
+		$.getJSON( url, function( data ) 
+		{
+		
+			obj = data;
+			totalEntries = obj["data"]["Leaderboard"].length;
+			obj["data"]["Leaderboard"].forEach( function (item)
+			{
+				rank = (parseInt(item.Position) + 1);
+				percentRank = parseInt(((1 - ((totalEntries - rank) / totalEntries)) * 100));
+				
+				if (isWinnipegFPV(item.DisplayName))
+				{
+					teamMemberCount += 1;
+					tableRow = "<tr class = 'success local-" + map + "'><td>" + teamMemberCount;
+				}
+				else
+				{
+					tableRow = "<tr class='global-" + map + "' style='display:none'><td>&nbsp;";
+				}
+				
+				
+				//add this pilot to the hash if they are not already in it
+				if (typeof(pilots[item.DisplayName]) === "undefined")
+				{
+					pilots[item.DisplayName] = {};
+				}
+				
+				
+				pilots[item.DisplayName][map] = {};
+				pilots[item.DisplayName][map]["time"] = msToTime(getTime(item.StatValue));
+				pilots[item.DisplayName][map]["rank"] = rank;
+				pilots[item.DisplayName][map]["percentRank"] = percentRank;
+				
+					
+					//add all times to cumulative leaderboard (except campaign and bud-light-2017)
+					if (map != 'campaign' && map != 'bud-light-2017-tryouts')
+					{
+							if (pilots[item.DisplayName]["mapCount"])
+							{
+								pilots[item.DisplayName]["mapCount"] += 1;
+								pilots[item.DisplayName]["cumulativeTime"] += getTime(item.StatValue);
+							}
+							else
+							{
+								pilots[item.DisplayName]["mapCount"] = 1;
+								pilots[item.DisplayName]["cumulativeTime"] = getTime(item.StatValue);
+							}
+					}
+				
+
+				
+				
+				//tableRow += " <td> " + rank + "<td>" + percentRank + "%<td>" + item.DisplayName + "<td>" + msToTime(getTime(item.StatValue)) + "</tr>";
+				//entries.push( tableRow );
+				
+			});
+
+			//add the table rows to the table for this map
+			//$('#' + map ).html(entries.join(""));
+			$('#' + map + '-total-entries' ).html("" + totalEntries + " pilots");
+			//$('#loading-' + map ).hide();
+			
+			//generate cumulative leaderboard once all map leaderboards have been generated
+			mapsRetrieved += 1;
+			if (mapsRetrieved == maps.length)
+			{
+				
+				generateCumulativeLeaderboard();
+				generateTable();
+				
+				
+				
+				var dataTable = $('#table').dataTable({
+					dom: 'Bfrtip',
+					extend: 'collection',
+					  buttons: [
+						{ extend: 'columnsToggle', columns: '.myColumns' }, // will be expanded to individual buttons
+						{ extend: 'columnToggle', text:'Gates Of Hell', columns:'.gates-of-hell' }, // single button grouped
+						{ extend: 'columnToggle', text:'Miami Lights', columns:'.miami-lights' }, // single button grouped
+						{ extend: 'columnToggle', text:'Lapocalypse', columns:'.lapocalypse' }, // single button grouped
+						{ extend: 'columnToggle', text:'Bell Labs', columns:'.bell-labs' }, // single button grouped
+						
+						{ extend: 'columnToggle', text:'Bud Light 2017 Tryouts', columns:'.bud-light-2017-tryouts' }, // single button grouped
+						{ extend: 'columnToggle', text:'Cumulative', columns:'.cumulative' } // single button grouped
+						
+					  ],
+					
+
+					
+					
+					paging: false,
+					columnDefs: [
+						{ targets: [2,3,5,6,8,9,11,12,14,15,17,18], orderable: false }
+						
+						
+					],
+					aaSorting: [[16, 'asc']]
+					
+				});
+				
+				var input = $(".dataTables_filter input");
+				input.unbind('keyup search input').bind('keypress', function (e) {
+					//if (e.which == 13) {
+					   var keywords = input.val().split(' '), filter ='';
+					   for (var i=0; i<keywords.length; i++) {
+						   filter = (filter!=='') ? filter+'|'+keywords[i] : keywords[i];
+					   }
+						
+					   dataTable.fnFilter(filter, null, true, false, true, true);
+					//}
+				});
+				
+				$("#total-pilots").html(Object.keys(pilots).length + " pilots" );
+				$("#cumulative-total-entries").html(cumulativePilots.length + " pilots");
+				$('#loading').hide();
+				$('#table').show();
+			}
+	
+		});
+
+	});
+	
+	
+	
+	
+});
+
+</script>
+
+<body>
+
+    <div id='loading'><td colspan=1 style='text-align:center'>Loading Leaderboard <img src='https://i1.wp.com/cdnjs.cloudflare.com/ajax/libs/galleriffic/2.0.1/css/loader.gif'></div>
+	<table  class='display order-column table-condensed' style='display:none;' id='table'>
+		
+		<thead id='header'></thead>
+			
+		
+		<tbody id='pilots'>
+		</tbody>
+	</table>
+   
+
+</body>
+
+ 
+</html>
