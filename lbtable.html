@@ -45,6 +45,10 @@ var mapsRetrieved = 0;
 var allTables = "";
 var pilots = {};
 var cumulativePilots = [];
+var fpvChatPilots = [];
+var slackObject;
+var iconUrl = "https://s3-us-west-2.amazonaws.com/slack-files2/avatars/2016-08-15/69701088597_b8b48e4eca2e7472d1ff_88.jpg";
+
 
 
 function getTime(value) {
@@ -74,6 +78,77 @@ function isWinnipegFPV(nameToCheck) {
 		
 	});
 	return isTeamMember;
+}
+
+function isFpvChatMember(nameToCheck) {
+//check to see if this leaderboard entry is part of the local leaderboard
+    isTeamMember = false;
+	fpvChatPilots.forEach(function (member) {
+		if (member["name"].toLowerCase() == nameToCheck.toLowerCase())
+		{
+			isTeamMember = true;
+		}
+		
+	});
+	return isTeamMember;
+}
+
+function getSlackMembers() {
+	url = "http://winnipegfpv.club/drl/users.py";
+	$.getJSON( url, function( data ) 
+		{
+		
+			fpvChatPilots = data['members'];
+			generateCumulativeLeaderboard();
+			generateTable();
+				
+				
+				
+				var dataTable = $('#table').dataTable({
+					dom: 'Bfrtip',
+					extend: 'collection',
+					  buttons: [
+						{ extend: 'columnsToggle', columns: '.myColumns' }, // will be expanded to individual buttons
+						{ extend: 'columnToggle', text:'Gates Of Hell', columns:'.gates-of-hell' }, // single button grouped
+						{ extend: 'columnToggle', text:'Miami Lights', columns:'.miami-lights' }, // single button grouped
+						{ extend: 'columnToggle', text:'Lapocalypse', columns:'.lapocalypse' }, // single button grouped
+						{ extend: 'columnToggle', text:'Bell Labs', columns:'.bell-labs' }, // single button grouped
+						
+						{ extend: 'columnToggle', text:'Bud Light 2017 Tryouts', columns:'.bud-light-2017-tryouts' }, // single button grouped
+						{ extend: 'columnToggle', text:'Cumulative', columns:'.cumulative' } // single button grouped
+						
+					  ],
+					
+
+					
+					
+					paging: false,
+					columnDefs: [
+						{ targets: [2,3,5,6,8,9,11,12,14,15,17,18], orderable: false }
+						
+						
+					],
+					aaSorting: [[16, 'asc']]
+					
+				});
+				
+				var input = $(".dataTables_filter input");
+				input.unbind('keyup search input').bind('keypress', function (e) {
+					//if (e.which == 13) {
+					   var keywords = input.val().split(' '), filter ='';
+					   for (var i=0; i<keywords.length; i++) {
+						   filter = (filter!=='') ? filter+'|'+keywords[i] : keywords[i];
+					   }
+						
+					   dataTable.fnFilter(filter, null, true, false, true, true);
+					//}
+				});
+				
+				$("#total-pilots").html(Object.keys(pilots).length + " pilots" );
+				$("#cumulative-total-entries").html(cumulativePilots.length + " pilots");
+				$('#loading').hide();
+				$('#table').show();
+	});
 }
 
 function convertMapToTitle(map) {
@@ -142,8 +217,15 @@ function generateTable() {
 	rows = [];
 	
 	$.each(pilots, function( name, pilot ) {
-		//console.log( index + ": " + value["mapCount"] );
-		tableRow = "<tr><td>" + name + "</td>" ;
+		//console.log(name);
+		
+		if (isFpvChatMember(name)) {
+			tableRow = "<tr><td>" + "<img src='" + iconUrl + "' style='height:20px'> " + name + "</td>" ;
+		}
+		else
+		{
+			tableRow = "<tr><td>" + name + "</td>" ;
+		}
 		count = 0;
 		maps.forEach(function (map) {
 			
@@ -256,55 +338,8 @@ $( document ).ready(function() {
 			if (mapsRetrieved == maps.length)
 			{
 				
-				generateCumulativeLeaderboard();
-				generateTable();
+				getSlackMembers();
 				
-				
-				
-				var dataTable = $('#table').dataTable({
-					dom: 'Bfrtip',
-					extend: 'collection',
-					  buttons: [
-						{ extend: 'columnsToggle', columns: '.myColumns' }, // will be expanded to individual buttons
-						{ extend: 'columnToggle', text:'Gates Of Hell', columns:'.gates-of-hell' }, // single button grouped
-						{ extend: 'columnToggle', text:'Miami Lights', columns:'.miami-lights' }, // single button grouped
-						{ extend: 'columnToggle', text:'Lapocalypse', columns:'.lapocalypse' }, // single button grouped
-						{ extend: 'columnToggle', text:'Bell Labs', columns:'.bell-labs' }, // single button grouped
-						
-						{ extend: 'columnToggle', text:'Bud Light 2017 Tryouts', columns:'.bud-light-2017-tryouts' }, // single button grouped
-						{ extend: 'columnToggle', text:'Cumulative', columns:'.cumulative' } // single button grouped
-						
-					  ],
-					
-
-					
-					
-					paging: false,
-					columnDefs: [
-						{ targets: [2,3,5,6,8,9,11,12,14,15,17,18], orderable: false }
-						
-						
-					],
-					aaSorting: [[16, 'asc']]
-					
-				});
-				
-				var input = $(".dataTables_filter input");
-				input.unbind('keyup search input').bind('keypress', function (e) {
-					//if (e.which == 13) {
-					   var keywords = input.val().split(' '), filter ='';
-					   for (var i=0; i<keywords.length; i++) {
-						   filter = (filter!=='') ? filter+'|'+keywords[i] : keywords[i];
-					   }
-						
-					   dataTable.fnFilter(filter, null, true, false, true, true);
-					//}
-				});
-				
-				$("#total-pilots").html(Object.keys(pilots).length + " pilots" );
-				$("#cumulative-total-entries").html(cumulativePilots.length + " pilots");
-				$('#loading').hide();
-				$('#table').show();
 			}
 	
 		});
