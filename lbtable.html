@@ -292,32 +292,40 @@ $( document ).ready(function() {
 					tableRow = "<tr class='global-" + map + "' style='display:none'><td>&nbsp;";
 				}
 				
+				pilotName = item.DisplayName;
+				
+				//handle entries with no pilot name
+				if (typeof(item.DisplayName) === "undefined")
+				{
+					//console.log(item.PlayFabId);
+					pilotName = map + "-pilot" + rank;
+				}
 				
 				//add this pilot to the hash if they are not already in it
-				if (typeof(pilots[item.DisplayName]) === "undefined")
+				if (typeof(pilots[pilotName]) === "undefined")
 				{
-					pilots[item.DisplayName] = {};
+					pilots[pilotName] = {};
 				}
 				
 				
-				pilots[item.DisplayName][map] = {};
-				pilots[item.DisplayName][map]["time"] = msToTime(getTime(item.StatValue));
-				pilots[item.DisplayName][map]["rank"] = rank;
-				pilots[item.DisplayName][map]["percentRank"] = percentRank;
+				pilots[pilotName][map] = {};
+				pilots[pilotName][map]["time"] = msToTime(getTime(item.StatValue));
+				pilots[pilotName][map]["rank"] = rank;
+				pilots[pilotName][map]["percentRank"] = percentRank;
 				
 					
 					//add all times to cumulative leaderboard (except campaign and bud-light-2017 and ohio-crash-site)
 					if (map != 'campaign' && map != 'bud-light-2017-tryouts' && map != 'ohio-crash-site')
 					{
-							if (pilots[item.DisplayName]["mapCount"])
+							if (pilots[pilotName]["mapCount"])
 							{
-								pilots[item.DisplayName]["mapCount"] += 1;
-								pilots[item.DisplayName]["cumulativeTime"] += getTime(item.StatValue);
+								pilots[pilotName]["mapCount"] += 1;
+								pilots[pilotName]["cumulativeTime"] += getTime(item.StatValue);
 							}
 							else
 							{
-								pilots[item.DisplayName]["mapCount"] = 1;
-								pilots[item.DisplayName]["cumulativeTime"] = getTime(item.StatValue);
+								pilots[pilotName]["mapCount"] = 1;
+								pilots[pilotName]["cumulativeTime"] = getTime(item.StatValue);
 							}
 					}
 				
