@@ -39,7 +39,7 @@ table.dataTable.display tbody tr:hover {
 
 <script>
 var teamLeaderboard = ['Highway11','Crust','xorrbit','Armand9x','vayerlaze'];
-var maps = ["gates-of-hell","miami-lights","lapocalypse","bell-labs","bud-light-2017-tryouts"];
+var maps = ["gates-of-hell","miami-lights","lapocalypse","bell-labs","ohio-crash-site","bud-light-2017-tryouts"];
 var colors = ["#4EC2F7","#F77B71","#EF6191","#B967C7","#7884CB","#81C784","#FFB64C"];
 var mapsRetrieved = 0;
 var allTables = "";
@@ -113,6 +113,7 @@ function getSlackMembers() {
 						{ extend: 'columnToggle', text:'Miami Lights', columns:'.miami-lights' }, // single button grouped
 						{ extend: 'columnToggle', text:'Lapocalypse', columns:'.lapocalypse' }, // single button grouped
 						{ extend: 'columnToggle', text:'Bell Labs', columns:'.bell-labs' }, // single button grouped
+						{ extend: 'columnToggle', text:'Ohio Crash Site', columns:'.ohio-crash-site' }, // single button grouped
 						
 						{ extend: 'columnToggle', text:'Bud Light 2017 Tryouts', columns:'.bud-light-2017-tryouts' }, // single button grouped
 						{ extend: 'columnToggle', text:'Cumulative', columns:'.cumulative' } // single button grouped
@@ -205,7 +206,7 @@ function generateTableHeader() {
 		tableHeader2 += "<th class='leftBorder " + map + "'>Rank</th><th class='" + map + "'>Time</th><th class='" + map + "'>Top</th>";
 		count += 1;
 	});
-	tableHeader1 += "<th colspan=3 class='leftBorder'>Cumulative<div style='color:#777;font-size:12px;font-style:italic;float:right;margin-right:2px;' id='cumulative-total-entries'></div></tr>";
+	tableHeader1 += "<th colspan=3 class='leftBorder'>Cumulative (4 map total)<div style='color:#777;font-size:12px;font-style:italic;float:right;margin-right:2px;' id='cumulative-total-entries'></div></tr>";
 	tableHeader2 += "<th class='leftBorder cumulative'>Rank</th><th class='cumulative'>Time</th><th class='cumulative'>Potential Tryout</th></tr>";
 	$('#header').html(tableHeader1 + tableHeader2);
 
@@ -305,8 +306,8 @@ $( document ).ready(function() {
 				pilots[item.DisplayName][map]["percentRank"] = percentRank;
 				
 					
-					//add all times to cumulative leaderboard (except campaign and bud-light-2017)
-					if (map != 'campaign' && map != 'bud-light-2017-tryouts')
+					//add all times to cumulative leaderboard (except campaign and bud-light-2017 and ohio-crash-site)
+					if (map != 'campaign' && map != 'bud-light-2017-tryouts' && map != 'ohio-crash-site')
 					{
 							if (pilots[item.DisplayName]["mapCount"])
 							{
