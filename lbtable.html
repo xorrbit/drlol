@@ -15,12 +15,16 @@
 <script src="https://cdn.datatables.net/buttons/1.2.2/js/buttons.colVis.min.js"></script>
 
 
+
 <style>
  .leftBorder {
   border-left: 1px solid #ccc;
 }
 .top {
  color:grey;
+}
+.highlight {
+	background-color: red;
 }
 table.dataTable tbody td {
     padding: 4px 5px;
@@ -34,11 +38,26 @@ table.dataTable thead th, table.dataTable thead td {
 table.dataTable.display tbody tr:hover {
     background-color: #DFF0D8;
 }
+.loading {
+	width: 200px;
+    height: 200px;
+    
+
+    position: absolute;
+    top:0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+
+    margin: auto;
+}
 </style>
 
 
 <script>
 var teamLeaderboard = ['Highway11','Crust','xorrbit','Armand9x','vayerlaze'];
+var pilotsToHighlight = [];
+
 var maps = ["gates-of-hell","miami-lights","lapocalypse","bell-labs","ohio-crash-site","bud-light-2017-tryouts"];
 var colors = ["#4EC2F7","#F77B71","#EF6191","#B967C7","#7884CB","#81C784","#FFB64C"];
 var mapsRetrieved = 0;
@@ -47,8 +66,64 @@ var pilots = {};
 var cumulativePilots = [];
 var fpvChatPilots = [];
 var slackObject;
+var columnToSort = 16;
 var iconUrl = "https://s3-us-west-2.amazonaws.com/slack-files2/avatars/2016-08-15/69701088597_b8b48e4eca2e7472d1ff_88.jpg";
 
+function getQueryString () {
+    var ret = {};
+	if (document.location.toString().indexOf("?") > 0)
+	{
+		var parts = (document.location.toString().split('?')[1]).split('&');
+		for (var i = 0; i < parts.length; i++) {
+
+			var p = parts[i].split('=');
+			// so strings will be correctly parsed:
+			p[1] = decodeURIComponent(p[1].replace(/\+/g, " "));
+
+			if (p[0].search(/\[\]/) >= 0) { // then it's an array
+				p[0] = p[0].replace('[]','');
+
+				if (typeof ret[p[0]] != 'object') ret[p[0]] = [];
+				ret[p[0]].push(p[1]);
+			} else {
+				ret[p[0]] = p[1];
+			}
+		}
+		return ret;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+function createCookie(name, value, days) {
+    var expires;
+
+    if (days) {
+        var date = new Date();
+        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+        expires = "; expires=" + date.toGMTString();
+    } else {
+        expires = "";
+    }
+    document.cookie = encodeURIComponent(name) + "=" + encodeURIComponent(value) + expires + "; path=/";
+}
+
+function readCookie(name) {
+    var nameEQ = encodeURIComponent(name) + "=";
+    var ca = document.cookie.split(';');
+    for (var i = 0; i < ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+        if (c.indexOf(nameEQ) === 0) return decodeURIComponent(c.substring(nameEQ.length, c.length));
+    }
+    return null;
+}
+
+function eraseCookie(name) {
+    createCookie(name, "", -1);
+}
 
 
 function getTime(value) {
@@ -72,6 +147,20 @@ function isWinnipegFPV(nameToCheck) {
     isTeamMember = false;
 	teamLeaderboard.forEach(function (name) {
 		if (name == nameToCheck)
+		{
+			isTeamMember = true;
+		}
+		
+	});
+	return isTeamMember;
+}
+
+function isPilotToHighlight(nameToCheck) {
+//check to see if this leaderboard entry is part of the local leaderboard
+    isTeamMember = false;
+	
+	pilotsToHighlight.forEach(function (name) {
+		if (name.toLowerCase() == nameToCheck.toLowerCase())
 		{
 			isTeamMember = true;
 		}
@@ -125,11 +214,20 @@ function getSlackMembers() {
 					
 					paging: false,
 					columnDefs: [
-						{ targets: [2,3,5,6,8,9,11,12,14,15,17,18], orderable: false }
+						{ targets: [2,3,5,6,8,9,11,12,14,15,17,18,20,21], orderable: false }
 						
 						
 					],
-					aaSorting: [[16, 'asc']]
+					aaSorting: [[columnToSort, 'asc']],
+					createdRow: function (row, data, index) {
+						//
+						// if the second column cell is blank apply special formatting
+						//
+						if (data[0] == "Nytfury") {
+							console.dir(row);
+							$(row).removeClass('odd').removeClass('even').addClass("highlight");
+						}
+					}
 					
 				});
 				
@@ -220,12 +318,20 @@ function generateTable() {
 	$.each(pilots, function( name, pilot ) {
 		//console.log(name);
 		
+		
+		rowStyle = "";
+		//rowStyle = "background:#f2dede";
+		if (isPilotToHighlight(name))
+		{
+			rowStyle = "background:#f2dede";
+		}
+		
 		if (isFpvChatMember(name)) {
-			tableRow = "<tr><td>" + "<img src='" + iconUrl + "' style='height:20px'> " + name + "</td>" ;
+			tableRow = "<tr style='" + rowStyle  + "'><td >" + "<img src='" + iconUrl + "' style='height:20px'> " + name + "</td>" ;
 		}
 		else
 		{
-			tableRow = "<tr><td>" + name + "</td>" ;
+			tableRow = "<tr style='" + rowStyle  + "'><td>" + name + "</td>" ;
 		}
 		count = 0;
 		maps.forEach(function (map) {
@@ -263,6 +369,16 @@ function generateTable() {
 
 
 $( document ).ready(function() {
+	
+	if (readCookie("pilotsCookie") != null)
+	{
+		pilotsToHighlight = readCookie("pilotsCookie").split(" ");
+	}
+	if (readCookie("mapCookie") != null)
+	{
+		columnToSort = readCookie("mapCookie");
+	}
+	
 	
 	generateTableHeader();
 	
@@ -360,11 +476,15 @@ $( document ).ready(function() {
 	
 });
 
+
 </script>
 
 <body>
 
-    <div id='loading'><td colspan=1 style='text-align:center'>Loading Leaderboard <img src='https://i1.wp.com/cdnjs.cloudflare.com/ajax/libs/galleriffic/2.0.1/css/loader.gif'></div>
+<!-- Trigger the modal with a button -->
+<button type="button" class="btn btn-info btn-xs" data-toggle="modal" data-target="#myModal" style="margin-left:10px;margin:10px">My Leaderboard Settings</button>
+
+    <div id='loading' class='loading'>Loading Leaderboard <img src='https://i1.wp.com/cdnjs.cloudflare.com/ajax/libs/galleriffic/2.0.1/css/loader.gif'></div>
 	<table  class='display order-column table-condensed' style='display:none;' id='table'>
 		
 		<thead id='header'></thead>
@@ -373,9 +493,61 @@ $( document ).ready(function() {
 		<tbody id='pilots'>
 		</tbody>
 	</table>
+	
+	<!-- Modal -->
+<div id="myModal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+
+    <!-- Modal content-->
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">My Leaderboard Settings</h4>
+      </div>
+      <div class="modal-body">
+        <form>
+			<div class="form-group">
+				<label for='pilotsCookie' >Pilot(s) To Highlight</label>
+				<input class='form-control col-md-12' id='pilotsCookie'>
+				<p class="help-block">add multiple pilots by seperating names with a space</p>
+				
+			</div>
+			<div class="form-group">
+				<label for='mapCookie'>Default Map To Sort By</label>
+				<select class='form-control' id='mapCookie'>
+					<option value='1'>Gates Of Hell</option>
+					<option value'4'>Miami Lights</option>
+					<option value='7'>Lapocalypse</option>
+					<option value='10'>Bell Labs</option>
+					<option value='13'>Ohio Crash Site</option>
+					<option value='16'>Bud Light 2017 Tryouts</option>
+					<option value='19'>Cumulative</option>
+				</select>
+			</div>
+		</form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" id='save-cookie-button' data-dismiss="modal">Save</button>
+      </div>
+    </div>
+
+  </div>
+</div>
    
 
 </body>
 
  
 </html>
+
+<script>
+	$("#pilotsCookie").val(readCookie("pilotsCookie"));
+	$('#mapCookie option[value=' + readCookie("mapCookie") + ']').prop('selected', true);
+
+	$( "#save-cookie-button" ).click(function() {
+	  createCookie('pilotsCookie',$("#pilotsCookie").val(),100);
+	  createCookie('mapCookie',$("#mapCookie").val(),100);
+	  location.reload();
+	});
+
+</script>
