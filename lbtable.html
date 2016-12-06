@@ -59,6 +59,7 @@ var teamLeaderboard = ['Highway11','Crust','xorrbit','Armand9x','vayerlaze'];
 var pilotsToHighlight = [];
 
 var maps = ["gates-of-hell","miami-lights","lapocalypse","bell-labs","ohio-crash-site","bud-light-2017-tryouts"];
+var tryoutMaps = ["gates-of-hell","miami-lights","lapocalypse","bell-labs"];
 var colors = ["#4EC2F7","#F77B71","#EF6191","#B967C7","#7884CB","#81C784","#FFB64C"];
 var mapsRetrieved = 0;
 var allTables = "";
@@ -140,6 +141,33 @@ function msToTime(s) {
   var hrs = (s - mins) / 60;
 
   return  mins + ':' + ("00" + secs).substr(-2,2) + '.' + ('00' + ms).slice(-3);
+}
+
+function convertMinutesToMs(time){
+    var timeArr = time.split(':');
+   
+    timeArr[0] = (timeArr[0]) ? parseInt(timeArr[0]) * 60000 : 0;
+    timeArr[1] = (timeArr[1]) ? parseInt(timeArr[1]) * 1000 : 0;
+    
+   return timeArr[0] + timeArr[1];
+}
+
+
+function calculateTryoutAverages() {
+	totalTime = 0;
+	tryoutMaps.forEach(function (map) {
+		time = convertMinutesToMs($('#' + map + '-tryout-time').val());
+		totalTime += time;
+		time = msToTime(time / 4);
+		time = time.substr(0,time.length - 4);
+		
+		$('#' + map + '-average-time').val(time);
+	});
+	totalTime = msToTime(totalTime);
+	totalTime = totalTime.substr(0,totalTime.length - 4);
+	$('#total-tryout-time').html(totalTime);
+	
+	
 }
 
 function isWinnipegFPV(nameToCheck) {
@@ -506,24 +534,93 @@ $( document ).ready(function() {
       </div>
       <div class="modal-body">
         <form>
-			<div class="form-group">
-				<label for='pilotsCookie' >Pilot(s) To Highlight</label>
-				<input class='form-control col-md-12' id='pilotsCookie'>
-				<p class="help-block">add multiple pilots by seperating names with a space</p>
-				
+			<div class='col-md-12 clearfix'>
+				<div class="form-group">
+					<label for='pilotsCookie' >Pilot(s) To Highlight</label>
+					<input class='form-control col-md-12' id='pilotsCookie'>
+					<p class="help-block">add multiple pilots by seperating names with a space</p>
+					
+				</div>
+				<div class="form-group">
+					<label for='mapCookie'>Default Map To Sort By</label>
+					<select class='form-control' id='mapCookie'>
+						<option value='1'>Gates Of Hell</option>
+						<option value'4'>Miami Lights</option>
+						<option value='7'>Lapocalypse</option>
+						<option value='10'>Bell Labs</option>
+						<option value='13'>Ohio Crash Site</option>
+						<option value='16'>Bud Light 2017 Tryouts</option>
+						<option value='19'>Cumulative</option>
+					</select>
+				</div>
 			</div>
-			<div class="form-group">
-				<label for='mapCookie'>Default Map To Sort By</label>
-				<select class='form-control' id='mapCookie'>
-					<option value='1'>Gates Of Hell</option>
-					<option value'4'>Miami Lights</option>
-					<option value='7'>Lapocalypse</option>
-					<option value='10'>Bell Labs</option>
-					<option value='13'>Ohio Crash Site</option>
-					<option value='16'>Bud Light 2017 Tryouts</option>
-					<option value='19'>Cumulative</option>
-				</select>
+			
+			
+			
+			<div class="row">
+				<div class='col-md-6 clearfix'>
+				<h4>4 Heat Times</h4>
+					<div class="form-group">
+						<label for='gates-of-hell-tryout-time' >Gates Of Hell</label>
+						<input class='form-control col-md-12' id='gates-of-hell-tryout-time' placeholder="00:00">
+						
+						
+					</div>
+					<div class="form-group">
+						<label for='miami-lights-tryout-time' >Miami Lights</label>
+						<input class='form-control col-md-12' id='miami-lights-tryout-time' placeholder='00:00'>
+						
+						
+					</div>
+					<div class="form-group">
+						<label for='lapocalypse-tryout-time' >Lapocalypse</label>
+						<input class='form-control col-md-12' id='lapocalypse-tryout-time' placeholder='00:00'>
+						
+						
+					</div>
+					<div class="form-group">
+						<label for='bell-labs-tryout-time' >Bell Labs</label>
+						<input class='form-control col-md-12' id='bell-labs-tryout-time' placeholder='00:00'>
+						
+						
+					</div>
+					<br>
+					<div class="form-group">
+						<button type="button" class="btn btn-info" id='calculate-button' onClick='calculateTryoutAverages()' style='margin-top:10px' >Calculate</button>
+					</div>
+				</div>
+				<div class='col-md-6 clearfix'>
+				<h4>Average 1 Heat Time</h4>
+					<div class="form-group">
+						<label for='gates-of-hell-average-time' >Gates Of Hell</label>
+						<input class='form-control col-md-12' id='gates-of-hell-average-time' readonly>
+						
+						
+					</div>
+					<div class="form-group">
+						<label for='miami-lights-average-time' >Miami Lights</label>
+						<input class='form-control col-md-12' id='miami-lights-average-time' readonly>
+						
+						
+					</div>
+					<div class="form-group">
+						<label for='lapocalypse-average-time' >Lapocalypse</label>
+						<input class='form-control col-md-12' id='lapocalypse-average-time' readonly>
+						
+						
+					</div>
+					<div class="form-group">
+						<label for='bell-labs-average-time' >Bell Labs</label>
+						<input class='form-control col-md-12' id='bell-labs-average-time' readonly>
+						
+						
+					</div>
+					<div class="form-group">
+					Total: <span id='total-tryout-time'></span>
+					</div>
+				</div>
 			</div>
+			
 		</form>
       </div>
       <div class="modal-footer">
@@ -541,12 +638,22 @@ $( document ).ready(function() {
 </html>
 
 <script>
+	//set inputs from cookie values
 	$("#pilotsCookie").val(readCookie("pilotsCookie"));
 	$('#mapCookie option[value=' + readCookie("mapCookie") + ']').prop('selected', true);
+	tryoutMaps.forEach(function (map) {
+		$('#' + map + '-tryout-time').val(readCookie(map + 'Cookie'));
+		
+	});
+	calculateTryoutAverages();
 
 	$( "#save-cookie-button" ).click(function() {
 	  createCookie('pilotsCookie',$("#pilotsCookie").val(),100);
 	  createCookie('mapCookie',$("#mapCookie").val(),100);
+	  tryoutMaps.forEach(function (map) {
+		createCookie(map + 'Cookie',$('#' + map + '-tryout-time').val(),100);
+		
+	});
 	  location.reload();
 	});
 
