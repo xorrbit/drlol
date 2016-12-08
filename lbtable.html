@@ -153,19 +153,60 @@ function convertMinutesToMs(time){
 }
 
 
-function calculateTryoutAverages() {
+function calculateTryoutAverages(method) {
+	pilotName = readCookie("pilotsCookie");
 	totalTime = 0;
+	if (method == "1")
+	{
+		inputField = "tryout";
+		outputField = "average";
+	}
+	if (method == "4")
+	{
+		inputField = "average";
+		outputField = "tryout";
+	}
+	
 	tryoutMaps.forEach(function (map) {
-		time = convertMinutesToMs($('#' + map + '-tryout-time').val());
-		totalTime += time;
-		time = msToTime(time / 4);
+		//calculate average
+		time = convertMinutesToMs($('#' + map + '-' + inputField + '-time').val());
+		
+		if (method == "1")
+		{
+			calculatedTime = time / 4;
+			averageTime = calculatedTime;
+			totalTime += time;
+		}
+		if (method == "4")
+		{
+			calculatedTime = time * 4;
+			averageTime = time;
+			totalTime += calculatedTime;
+		}
+		
+		time = msToTime(calculatedTime);
 		time = time.substr(0,time.length - 4);
 		
-		$('#' + map + '-average-time').val(time);
+		$('#' + map + '-' + outputField + '-time').val(time);
+		
+		//calculate +/- from best
+		
+		bestTime = pilots[pilotName][map]["time"];
+		bestTime = convertMinutesToMs(bestTime.substr(0,bestTime.length -4)) + parseInt(bestTime.slice(-3));
+		console.log("Average Time " + map);
+		console.log(averageTime);
+		console.log("Best Time " + map);
+		console.log(bestTime);
+		plusMinus = msToTime(averageTime - bestTime);
+		$('#' + map + '-best-time').val(plusMinus.slice(2));
+		
 	});
 	totalTime = msToTime(totalTime);
 	totalTime = totalTime.substr(0,totalTime.length - 4);
 	$('#total-tryout-time').html(totalTime);
+	
+	
+	
 	
 	
 }
@@ -275,7 +316,16 @@ function getSlackMembers() {
 				$("#cumulative-total-entries").html(cumulativePilots.length + " pilots");
 				$('#loading').hide();
 				$('#table').show();
-	});
+				
+				//set inputs from cookie values
+				$("#pilotsCookie").val(readCookie("pilotsCookie"));
+				$('#mapCookie option[value=' + readCookie("mapCookie") + ']').prop('selected', true);
+				tryoutMaps.forEach(function (map) {
+					$('#' + map + '-tryout-time').val(readCookie(map + 'Cookie'));
+					
+				});
+				calculateTryoutAverages("1");
+				});
 }
 
 function convertMapToTitle(map) {
@@ -558,7 +608,7 @@ $( document ).ready(function() {
 			
 			
 			<div class="row">
-				<div class='col-md-6 clearfix'>
+				<div class='col-sm-4 clearfix'>
 				<h4>4 Heat Times</h4>
 					<div class="form-group">
 						<label for='gates-of-hell-tryout-time' >Gates Of Hell</label>
@@ -586,38 +636,71 @@ $( document ).ready(function() {
 					</div>
 					<br>
 					<div class="form-group">
-						<button type="button" class="btn btn-info" id='calculate-button' onClick='calculateTryoutAverages()' style='margin-top:10px' >Calculate</button>
+						<button type="button" class="btn btn-info" id='calculate-button' onClick='calculateTryoutAverages("1")' style='margin-top:10px' >Calculate 1 Heat Time ></button>
 					</div>
 				</div>
-				<div class='col-md-6 clearfix'>
+				<div class='col-sm-4 clearfix'>
 				<h4>Average 1 Heat Time</h4>
 					<div class="form-group">
 						<label for='gates-of-hell-average-time' >Gates Of Hell</label>
-						<input class='form-control col-md-12' id='gates-of-hell-average-time' readonly>
+						<input class='form-control col-md-12' id='gates-of-hell-average-time' >
 						
 						
 					</div>
 					<div class="form-group">
 						<label for='miami-lights-average-time' >Miami Lights</label>
-						<input class='form-control col-md-12' id='miami-lights-average-time' readonly>
+						<input class='form-control col-md-12' id='miami-lights-average-time' >
 						
 						
 					</div>
 					<div class="form-group">
 						<label for='lapocalypse-average-time' >Lapocalypse</label>
-						<input class='form-control col-md-12' id='lapocalypse-average-time' readonly>
+						<input class='form-control col-md-12' id='lapocalypse-average-time' >
 						
 						
 					</div>
 					<div class="form-group">
 						<label for='bell-labs-average-time' >Bell Labs</label>
-						<input class='form-control col-md-12' id='bell-labs-average-time' readonly>
+						<input class='form-control col-md-12' id='bell-labs-average-time' >
+						
+						
+					</div>
+					<br>
+					<div class="form-group">
+						<button type="button" class="btn btn-info" id='calculate-button' onClick='calculateTryoutAverages("4")' style='margin-top:10px' > < Calculate 4 Heat Time</button>
+					</div>
+					
+				</div>
+				<div class='col-sm-4 clearfix'>
+				<h4>Best Time +/-</h4>
+					<div class="form-group">
+						<label for='gates-of-hell-best-time' >Gates Of Hell</label>
+						<input class='form-control col-md-12' id='gates-of-hell-best-time' readonly>
 						
 						
 					</div>
 					<div class="form-group">
-					Total: <span id='total-tryout-time'></span>
+						<label for='miami-lights-best-time' >Miami Lights</label>
+						<input class='form-control col-md-12' id='miami-lights-best-time' readonly>
+						
+						
 					</div>
+					<div class="form-group">
+						<label for='lapocalypse-best-time' >Lapocalypse</label>
+						<input class='form-control col-md-12' id='lapocalypse-best-time' readonly>
+						
+						
+					</div>
+					<div class="form-group">
+						<label for='bell-labs-best-time' >Bell Labs</label>
+						<input class='form-control col-md-12' id='bell-labs-best-time' readonly>
+						
+						
+					</div>
+					<div class="form-group" style="margin-top:50px;">
+					Total: <span class="badge" id='total-tryout-time'></span>
+					</div>
+					
 				</div>
 			</div>
 			
@@ -638,14 +721,7 @@ $( document ).ready(function() {
 </html>
 
 <script>
-	//set inputs from cookie values
-	$("#pilotsCookie").val(readCookie("pilotsCookie"));
-	$('#mapCookie option[value=' + readCookie("mapCookie") + ']').prop('selected', true);
-	tryoutMaps.forEach(function (map) {
-		$('#' + map + '-tryout-time').val(readCookie(map + 'Cookie'));
-		
-	});
-	calculateTryoutAverages();
+	
 
 	$( "#save-cookie-button" ).click(function() {
 	  createCookie('pilotsCookie',$("#pilotsCookie").val(),100);
