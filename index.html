@@ -9,7 +9,10 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/3.3.2/js/bootstrap-switch.min.js"></script>
 
 <script>
-var teamLeaderboard = ['Highway11','Crust','xorrbit','Armand9x','TundraKing','Thradis'];
+var team1 = ['Highway11','Crust','xorrbit','Armand9x'];
+var team2 = ['TundraKing','Thradis'];
+iconTeam1 = "<img src='https://s3-us-west-2.amazonaws.com/slack-files2/avatars/2016-09-20/81758093536_03d6a2b9c7605d31529f_132.jpg' style='height:23px;margin-right:5px;'>";
+iconTeam2 = "<img src='https://s3-us-west-2.amazonaws.com/slack-files2/avatars/2016-08-22/71669244807_1feba85d12ebdb8a3d70_132.jpg' style='height:23px;margin-right:5px;'>";
 var maps = ["gates-of-hell","miami-lights","lapocalypse","bell-labs","ohio-crash-site","detroit"];
 var numMaps = maps.length;
 var mapsRetrieved = 0;
@@ -32,10 +35,10 @@ function msToTime(s) {
   return  mins + ':' + ("00" + secs).substr(-2,2) + '.' + ('00' + ms).slice(-3);
 }
 
-function isWinnipegFPV(nameToCheck) {
+function isOnTeam(nameToCheck,team) {
 //check to see if this leaderboard entry is part of the local leaderboard
     isTeamMember = false;
-	teamLeaderboard.forEach(function (name) {
+	team.forEach(function (name) {
 		if (name == nameToCheck)
 		{
 			isTeamMember = true;
@@ -99,17 +102,25 @@ function generateCumulativeLeaderboard() {
 	//generate table row for each pilot
 	cumulativePilots.forEach( function (item)
 	{
-		if (isWinnipegFPV(item.name))
+		if (isOnTeam(item.name,team1))
 		{
 			teamMemberCount += 1;
 			tableRow = "<tr class = 'success local-cumulative'><td>" + teamMemberCount;
+			tableRow += " <td> " + count +  "<td>" + iconTeam1 + item.name + "<td>" + msToTime(item.cumulativeTime) + "</tr>";
+		}
+		else if (isOnTeam(item.name,team2))
+		{
+			teamMemberCount += 1;
+			tableRow = "<tr class = 'danger local-cumulative'><td>" + teamMemberCount;
+			tableRow += " <td> " + count +  "<td>" + iconTeam2 + item.name + "<td>" + msToTime(item.cumulativeTime) + "</tr>";
 		}
 		else
 		{
 			tableRow = "<tr class='global-cumulative' style='display:none'><td>&nbsp;";
+			tableRow += " <td> " + count +  "<td>" + item.name + "<td>" + msToTime(item.cumulativeTime) + "</tr>";
 		}
 		
-		tableRow += " <td> " + count +  "<td>" + item.name + "<td>" + msToTime(item.cumulativeTime) + "</tr>";
+		
 		entries.push( tableRow );
 		count += 1;
 	});
@@ -146,14 +157,29 @@ $( document ).ready(function() {
 			totalEntries = obj["data"]["Leaderboard"].length;
 			obj["data"]["Leaderboard"].forEach( function (item)
 			{
-				if (isWinnipegFPV(item.DisplayName))
+				
+				rank = (parseInt(item.Position) + 1);
+				percentRank = parseInt(((1 - ((totalEntries - rank) / totalEntries)) * 100));
+				
+				if (isOnTeam(item.DisplayName,team1))
 				{
 					teamMemberCount += 1;
 					tableRow = "<tr class = 'success local-" + map + "'><td>" + teamMemberCount;
+					
+					tableRow += " <td> " + rank + "<td>" + percentRank + "%<td>" + iconTeam1 + item.DisplayName + "<td>" + msToTime(getTime(item.StatValue)) + "</tr>";
+					
+				}
+				else if (isOnTeam(item.DisplayName,team2))
+				{
+					teamMemberCount += 1;
+					
+					tableRow = "<tr class = 'danger local-" + map + "'><td>" + teamMemberCount;
+					tableRow += " <td> " + rank + "<td>" + percentRank + "%<td>" + iconTeam2 + item.DisplayName + "<td>" + msToTime(getTime(item.StatValue)) + "</tr>";
 				}
 				else
 				{
 					tableRow = "<tr class='global-" + map + "' style='display:none'><td>&nbsp;";
+					tableRow += " <td> " + rank + "<td>" + percentRank + "%<td>" + item.DisplayName + "<td>" + msToTime(getTime(item.StatValue)) + "</tr>";
 				}
 				
 				//add all times to cumulative leaderboard (except campaign and bud-light-2017)
@@ -176,10 +202,9 @@ $( document ).ready(function() {
 					}
 				}
 
-				rank = (parseInt(item.Position) + 1);
-				percentRank = parseInt(((1 - ((totalEntries - rank) / totalEntries)) * 100))
 				
-				tableRow += " <td> " + rank + "<td>" + percentRank + "%<td>" + item.DisplayName + "<td>" + msToTime(getTime(item.StatValue)) + "</tr>";
+				
+				
 				entries.push( tableRow );
 				
 			});
