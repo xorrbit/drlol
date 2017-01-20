@@ -9,9 +9,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/3.3.2/js/bootstrap-switch.min.js"></script>
 
 <script>
-var teamLeaderboard = ['Highway11','Crust','xorrbit','Armand9x','vayerlaze'];
-var maps = ["gates-of-hell","miami-lights","lapocalypse","bell-labs","campaign","bud-light-2017-tryouts"];
-var numMaps = 6;
+var teamLeaderboard = ['Highway11','Crust','xorrbit','Armand9x','TundraKing','Thradis'];
+var maps = ["gates-of-hell","miami-lights","lapocalypse","bell-labs","ohio-crash-site","detroit"];
+var numMaps = maps.length;
 var mapsRetrieved = 0;
 var allTables = "";
 var pilots = {};
@@ -76,14 +76,15 @@ function generateTable(map) {
 }
 
 function generateCumulativeLeaderboard() {
-	//create array of all pilots that have completed 4 maps 
+	//create array of all pilots that have completed all maps 
 	cumulativePilots = [];
 	$.each(pilots, function( index, value ) {
 		//console.log( index + ": " + value["mapCount"] );
 		
-		if (value.mapCount == 4)
+		if (value.mapCount == numMaps)
 			{
 				cumulativePilots.push({name:index, cumulativeTime:value.cumulativeTime});
+				//console.log("adding to cumulative");
 			}
 	});
 	
@@ -137,7 +138,7 @@ $( document ).ready(function() {
 		var teamMemberCount = 0;
 		var entries = [];
 	
-		url = "/drl/drlol.py?map=" + map;
+		url = "http://winnipegfpv.club/drl/drlol.py?map=" + map;
 		$.getJSON( url, function( data ) 
 		{
 		
