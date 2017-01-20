@@ -58,7 +58,7 @@ table.dataTable.display tbody tr:hover {
 var teamLeaderboard = ['Highway11','Crust','xorrbit','Armand9x','vayerlaze'];
 var pilotsToHighlight = [];
 
-var maps = ["gates-of-hell","miami-lights","lapocalypse","bell-labs","ohio-crash-site","bud-light-2017-tryouts"];
+var maps = ["gates-of-hell","miami-lights","lapocalypse","bell-labs","ohio-crash-site","detroit","bud-light-2017-tryouts"];
 var tryoutMaps = ["gates-of-hell","miami-lights","lapocalypse","bell-labs"];
 var colors = ["#4EC2F7","#F77B71","#EF6191","#B967C7","#7884CB","#81C784","#FFB64C"];
 var mapsRetrieved = 0;
@@ -193,10 +193,10 @@ function calculateTryoutAverages(method) {
 		
 		bestTime = pilots[pilotName][map]["time"];
 		bestTime = convertMinutesToMs(bestTime.substr(0,bestTime.length -4)) + parseInt(bestTime.slice(-3));
-		console.log("Average Time " + map);
-		console.log(averageTime);
-		console.log("Best Time " + map);
-		console.log(bestTime);
+		//console.log("Average Time " + map);
+		//console.log(averageTime);
+		//console.log("Best Time " + map);
+		//console.log(bestTime);
 		plusMinus = msToTime(averageTime - bestTime);
 		$('#' + map + '-best-time').val(plusMinus.slice(2));
 		
@@ -272,6 +272,7 @@ function getSlackMembers() {
 						{ extend: 'columnToggle', text:'Lapocalypse', columns:'.lapocalypse' }, // single button grouped
 						{ extend: 'columnToggle', text:'Bell Labs', columns:'.bell-labs' }, // single button grouped
 						{ extend: 'columnToggle', text:'Ohio Crash Site', columns:'.ohio-crash-site' }, // single button grouped
+						{ extend: 'columnToggle', text:'Detroit', columns:'.detroit' }, // single button grouped
 						
 						{ extend: 'columnToggle', text:'Bud Light 2017 Tryouts', columns:'.bud-light-2017-tryouts' }, // single button grouped
 						{ extend: 'columnToggle', text:'Cumulative', columns:'.cumulative' } // single button grouped
@@ -283,7 +284,7 @@ function getSlackMembers() {
 					
 					paging: false,
 					columnDefs: [
-						{ targets: [2,3,5,6,8,9,11,12,14,15,17,18,20,21], orderable: false }
+						{ targets: [2,3,5,6,8,9,11,12,14,15,17,18,20,21,23], orderable: false }
 						
 						
 					],
@@ -324,7 +325,7 @@ function getSlackMembers() {
 					$('#' + map + '-tryout-time').val(readCookie(map + 'Cookie'));
 					
 				});
-				calculateTryoutAverages("1");
+				//calculateTryoutAverages("1");
 				});
 }
 
@@ -346,7 +347,7 @@ function generateCumulativeLeaderboard() {
 	$.each(pilots, function( index, value ) {
 		//console.log( index + ": " + value["mapCount"] );
 		
-		if (value.mapCount == 4)
+		if (value.mapCount == 6)
 			{
 				cumulativePilots.push({name:index, cumulativeTime:value.cumulativeTime});
 			}
@@ -382,8 +383,10 @@ function generateTableHeader() {
 		tableHeader2 += "<th class='leftBorder " + map + "'>Rank</th><th class='" + map + "'>Time</th><th class='" + map + "'>Top</th>";
 		count += 1;
 	});
-	tableHeader1 += "<th colspan=3 class='leftBorder'>Cumulative (4 map total)<div style='color:#777;font-size:12px;font-style:italic;float:right;margin-right:2px;' id='cumulative-total-entries'></div></tr>";
-	tableHeader2 += "<th class='leftBorder cumulative'>Rank</th><th class='cumulative'>Time</th><th class='cumulative'>Potential Tryout</th></tr>";
+	tableHeader1 += "<th colspan=2 class='leftBorder'>Cumulative (6 map total)<div style='color:#777;font-size:12px;font-style:italic;float:right;margin-right:2px;' id='cumulative-total-entries'></div></tr>";
+	tableHeader2 += "<th class='leftBorder cumulative'>Rank</th><th class='cumulative'>Time</th>";
+	//tableHeader2 += "<th class='cumulative'>Potential Tryout</th>";
+	tableHeader2 += "</tr>";
 	$('#header').html(tableHeader1 + tableHeader2);
 
 
@@ -424,13 +427,15 @@ function generateTable() {
 			
 			count += 1;
 		});
-		if (pilot['mapCount'] == 4)
+		if (pilot['mapCount'] == 6)
 		{
-			tableRow += "<td class='leftBorder'>" + pilot.cumulativeRank + "<td>" + msToTime(pilot.cumulativeTime) + "</td>" + "<td>" + msToTime(pilot.cumulativeTime * 4) ;
+			tableRow += "<td class='leftBorder'>" + pilot.cumulativeRank + "<td>" + msToTime(pilot.cumulativeTime) + "</td>";
+			//tableRow += "<td>" + msToTime(pilot.cumulativeTime * 6) ;
 		}
 		else
 		{
-			tableRow += "<td class='leftBorder'><span style='opacity:.001'>99999</span></td><td>&nbsp;</td><td>&nbsp;</td>";
+			tableRow += "<td class='leftBorder'><span style='opacity:.001'>99999</span></td><td>&nbsp;</td>";
+			//tableRow += "<td>&nbsp;</td>";
 		}
 		tableRow += "</tr>";
 		rows.push(tableRow);
@@ -509,7 +514,7 @@ $( document ).ready(function() {
 				
 					
 					//add all times to cumulative leaderboard (except campaign and bud-light-2017 and ohio-crash-site)
-					if (map != 'campaign' && map != 'bud-light-2017-tryouts' && map != 'ohio-crash-site')
+					if (map != 'campaign' && map != 'bud-light-2017-tryouts')
 					{
 							if (pilots[pilotName]["mapCount"])
 							{
@@ -584,29 +589,32 @@ $( document ).ready(function() {
       </div>
       <div class="modal-body">
         <form>
-			<div class='col-md-12 clearfix'>
-				<div class="form-group">
-					<label for='pilotsCookie' >Pilot(s) To Highlight</label>
-					<input class='form-control col-md-12' id='pilotsCookie'>
-					<p class="help-block">add multiple pilots by seperating names with a space</p>
-					
-				</div>
-				<div class="form-group">
-					<label for='mapCookie'>Default Map To Sort By</label>
-					<select class='form-control' id='mapCookie'>
-						<option value='1'>Gates Of Hell</option>
-						<option value'4'>Miami Lights</option>
-						<option value='7'>Lapocalypse</option>
-						<option value='10'>Bell Labs</option>
-						<option value='13'>Ohio Crash Site</option>
-						<option value='16'>Bud Light 2017 Tryouts</option>
-						<option value='19'>Cumulative</option>
-					</select>
+			<div class="row">
+				<div class='col-md-12 clearfix'>
+					<div class="form-group">
+						<label for='pilotsCookie' >Pilot(s) To Highlight</label>
+						<input class='form-control col-md-12' id='pilotsCookie'>
+						<p class="help-block">add multiple pilots by seperating names with a space</p>
+						
+					</div>
+					<div class="form-group">
+						<label for='mapCookie'>Default Map To Sort By</label>
+						<select class='form-control' id='mapCookie'>
+							<option value='1'>Gates Of Hell</option>
+							<option value'4'>Miami Lights</option>
+							<option value='7'>Lapocalypse</option>
+							<option value='10'>Bell Labs</option>
+							<option value='13'>Ohio Crash Site</option>
+							<option value='16'>Detroit</option>
+							<option value='19'>Bud Light 2017 Tryouts</option>
+							<option value='22'>Cumulative</option>
+						</select>
+					</div>
 				</div>
 			</div>
 			
 			
-			
+			<!--
 			<div class="row">
 				<div class='col-sm-4 clearfix'>
 				<h4>4 Heat Times</h4>
@@ -703,6 +711,7 @@ $( document ).ready(function() {
 					
 				</div>
 			</div>
+			-->
 			
 		</form>
       </div>
@@ -726,10 +735,10 @@ $( document ).ready(function() {
 	$( "#save-cookie-button" ).click(function() {
 	  createCookie('pilotsCookie',$("#pilotsCookie").val(),100);
 	  createCookie('mapCookie',$("#mapCookie").val(),100);
-	  tryoutMaps.forEach(function (map) {
-		createCookie(map + 'Cookie',$('#' + map + '-tryout-time').val(),100);
-		
-	});
+	  //tryoutMaps.forEach(function (map) {
+	//	createCookie(map + 'Cookie',$('#' + map + '-tryout-time').val(),100);
+	//	
+	//});
 	  location.reload();
 	});
 
