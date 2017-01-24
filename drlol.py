@@ -20,7 +20,12 @@ allowed_maps = {
   'lapocalypse',
   'gates-of-hell',
   'campaign',
-  'bud-light-2017-tryouts'
+  'bud-light-2017-tryouts',
+  'ohio-crash-site',
+  'gates-of-hell-shipyard',
+  'gates-of-hell-city',
+  'gates-of-hell-woods',
+  'detroit'
 }
 
 drl_map = cgi.FieldStorage().getvalue('map')
@@ -92,6 +97,12 @@ if drl_map == 'campaign':
   drl_map_full = 'SP.CP.TotalTime'
 elif drl_map == 'bud-light-2017-tryouts':
   drl_map_full = 'SP.TO.A21.TotalTime'
+elif drl_map == 'gates-of-hell-shipyard':
+  drl_map_full = 'SP.RC.gates-of-hell.race-01.TotalTime'
+elif drl_map == 'gates-of-hell-city':
+  drl_map_full = 'SP.RC.gates-of-hell.race-02.TotalTime'
+elif drl_map == 'gates-of-hell-woods':
+  drl_map_full = 'SP.RC.gates-of-hell.race-03.TotalTime'
 else:
   drl_map_full = 'SP.RC.' + drl_map + '.race.TotalTime'
 
