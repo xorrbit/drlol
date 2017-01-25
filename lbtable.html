@@ -58,9 +58,10 @@ table.dataTable.display tbody tr:hover {
 var teamLeaderboard = ['Highway11','Crust','xorrbit','Armand9x','vayerlaze'];
 var pilotsToHighlight = [];
 
-var maps = ["gates-of-hell","miami-lights","lapocalypse","bell-labs","ohio-crash-site","detroit","bud-light-2017-tryouts"];
+var maps = ["gates-of-hell-shipyard","gates-of-hell-woods","gates-of-hell-city","gates-of-hell","miami-lights","lapocalypse","bell-labs","ohio-crash-site","detroit","bud-light-2017-tryouts"];
 var tryoutMaps = ["gates-of-hell","miami-lights","lapocalypse","bell-labs"];
-var colors = ["#4EC2F7","#F77B71","#EF6191","#B967C7","#7884CB","#81C784","#FFB64C"];
+var colors = ["#4EC2F7","#F77B71","#EF6191","#B967C7","#7884CB","#81C784","#FFB64C","#F44336","#E91E63","#3F51B5","#2196F3","#03A9F4","#00BCD4","#009688","#4CAF50","#8BC34A","#CDDC39","#FFEB3B","#FFC107","#FF9800","#FF5722","#795548","#607D8B"];
+//var colors = ["#F44336","#E91E63","#E91E63","#673AB7","#3F51B5","#2196F3","#03A9F4","#00BCD4","#009688","#4CAF50","#8BC34A","#CDDC39","#FFEB3B","#FFC107","#FF9800","#FF5722","#795548","#607D8B"];
 var mapsRetrieved = 0;
 var allTables = "";
 var pilots = {};
@@ -267,6 +268,9 @@ function getSlackMembers() {
 					extend: 'collection',
 					  buttons: [
 						{ extend: 'columnsToggle', columns: '.myColumns' }, // will be expanded to individual buttons
+						{ extend: 'columnToggle', text:'GoH Shipyard', columns:'.gates-of-hell-shipyard' }, // single button grouped
+						{ extend: 'columnToggle', text:'GoH Woods', columns:'.gates-of-hell-woods' }, // single button grouped
+						{ extend: 'columnToggle', text:'GoH City', columns:'.gates-of-hell-city' }, // single button grouped
 						{ extend: 'columnToggle', text:'Gates Of Hell', columns:'.gates-of-hell' }, // single button grouped
 						{ extend: 'columnToggle', text:'Miami Lights', columns:'.miami-lights' }, // single button grouped
 						{ extend: 'columnToggle', text:'Lapocalypse', columns:'.lapocalypse' }, // single button grouped
@@ -284,7 +288,7 @@ function getSlackMembers() {
 					
 					paging: false,
 					columnDefs: [
-						{ targets: [2,3,5,6,8,9,11,12,14,15,17,18,20,21,23], orderable: false }
+						{ targets: [2,3,5,6,8,9,11,12,14,15,17,18,20,21,23,24,26,27,29,30,32], orderable: false }
 						
 						
 					],
@@ -347,7 +351,7 @@ function generateCumulativeLeaderboard() {
 	$.each(pilots, function( index, value ) {
 		//console.log( index + ": " + value["mapCount"] );
 		
-		if (value.mapCount == 6)
+		if (value.mapCount == 9)
 			{
 				cumulativePilots.push({name:index, cumulativeTime:value.cumulativeTime});
 			}
@@ -427,7 +431,7 @@ function generateTable() {
 			
 			count += 1;
 		});
-		if (pilot['mapCount'] == 6)
+		if (pilot['mapCount'] == 9)
 		{
 			tableRow += "<td class='leftBorder'>" + pilot.cumulativeRank + "<td>" + msToTime(pilot.cumulativeTime) + "</td>";
 			//tableRow += "<td>" + msToTime(pilot.cumulativeTime * 6) ;
@@ -600,14 +604,17 @@ $( document ).ready(function() {
 					<div class="form-group">
 						<label for='mapCookie'>Default Map To Sort By</label>
 						<select class='form-control' id='mapCookie'>
-							<option value='1'>Gates Of Hell</option>
-							<option value'4'>Miami Lights</option>
-							<option value='7'>Lapocalypse</option>
-							<option value='10'>Bell Labs</option>
-							<option value='13'>Ohio Crash Site</option>
-							<option value='16'>Detroit</option>
-							<option value='19'>Bud Light 2017 Tryouts</option>
-							<option value='22'>Cumulative</option>
+							<option value='1'>GoH Shipyard </option>
+							<option value='4'>GoH Woods</option>
+							<option value='7'>GoH City</option>
+							<option value='10'>Gates Of Hell</option>
+							<option value'13'>Miami Lights</option>
+							<option value='16'>Lapocalypse</option>
+							<option value='19'>Bell Labs</option>
+							<option value='22'>Ohio Crash Site</option>
+							<option value='25'>Detroit</option>
+							<option value='28'>Bud Light 2017 Tryouts</option>
+							<option value='31'>Cumulative</option>
 						</select>
 					</div>
 				</div>
