@@ -25,7 +25,11 @@ allowed_maps = {
   'gates-of-hell-shipyard',
   'gates-of-hell-city',
   'gates-of-hell-woods',
-  'detroit'
+  'bell-labs-project-noob',
+  'bell-labs-trinity-test',
+  'detroit',
+  'drl-sandbox',
+  'drl-sandbox-straight-line'
 }
 
 drl_map = cgi.FieldStorage().getvalue('map')
@@ -103,6 +107,12 @@ elif drl_map == 'gates-of-hell-city':
   drl_map_full = 'SP.RC.gates-of-hell.race-02.TotalTime'
 elif drl_map == 'gates-of-hell-woods':
   drl_map_full = 'SP.RC.gates-of-hell.race-03.TotalTime'
+elif drl_map == 'bell-labs-project-noob':
+  drl_map_full = 'SP.RC.bell-labs.race-01.TotalTime'
+elif drl_map == 'bell-labs-trinity-test':
+  drl_map_full = 'SP.RC.bell-labs.race-02.TotalTime'
+elif drl_map == 'drl-sandbox-straight-line':
+  drl_map_full = 'SP.RC.drl-sandbox.straigh-line.TotalTime'
 else:
   drl_map_full = 'SP.RC.' + drl_map + '.race.TotalTime'
 
