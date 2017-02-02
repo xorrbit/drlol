@@ -13,7 +13,7 @@ var team1 = ['Highway11','Crust','xorrbit','Armand9x'];
 var team2 = ['TundraKing','Thradis','FliegerFPV','Airmonos','QuadSquared'];
 iconTeam1 = "<img src='https://s3-us-west-2.amazonaws.com/slack-files2/avatars/2016-09-20/81758093536_03d6a2b9c7605d31529f_132.jpg' style='height:23px;margin-right:5px;'>";
 iconTeam2 = "<img src='https://s3-us-west-2.amazonaws.com/slack-files2/avatars/2016-08-22/71669244807_1feba85d12ebdb8a3d70_132.jpg' style='height:23px;margin-right:5px;'>";
-var maps = ["gates-of-hell-shipyard","gates-of-hell-city","gates-of-hell-woods","gates-of-hell","miami-lights","lapocalypse","bell-labs","ohio-crash-site","detroit"];
+var maps = ["gates-of-hell-shipyard","gates-of-hell-city","gates-of-hell-woods","gates-of-hell","miami-lights","lapocalypse","bell-labs","bell-labs-project-noob","bell-labs-trinity-test","ohio-crash-site","detroit","drl-sandbox","drl-sandbox-straight-line"];
 var numMaps = maps.length;
 var mapsRetrieved = 0;
 var allTables = "";
@@ -33,6 +33,20 @@ function msToTime(s) {
   var hrs = (s - mins) / 60;
 
   return  mins + ':' + ("00" + secs).substr(-2,2) + '.' + ('00' + ms).slice(-3);
+}
+
+function setProgressBar(currentMap,totalMaps) {
+	$('#current-map-loading').html(currentMap);
+	$('#total-map-count').html(totalMaps);
+	$('#progress-bar').width(((currentMap/totalMaps) * 100) + "%");
+	if (currentMap == totalMaps)
+	{
+		$('#progress-bar').removeClass('active');
+		$('#progress-bar').removeClass('progress-bar-striped');
+		$('#progress-bar').html(" All " + totalMaps + " maps loaded");
+	}
+	
+
 }
 
 function isOnTeam(nameToCheck,team) {
@@ -143,7 +157,7 @@ $( document ).ready(function() {
 		$('.global-' + $(this).attr('data-map')).toggle();
 	});
 	
-	
+	setProgressBar(1,numMaps);
 	//retrieve leaderboard json for each map
 	maps.forEach(function (map) {
 		var teamMemberCount = 0;
@@ -216,6 +230,7 @@ $( document ).ready(function() {
 			
 			//generate cumulative leaderboard once all map leaderboards have been generated
 			mapsRetrieved += 1;
+			setProgressBar(mapsRetrieved,numMaps);
 			if (mapsRetrieved == numMaps)
 			{
 				generateCumulativeLeaderboard();
@@ -234,6 +249,12 @@ $( document ).ready(function() {
 
 <body>
 <a href="http://thedroneracingleague.com/simulator/download/" target="_blank">Download DRL Simulator Here</a><br/><br/>
+<div class="progress" style="max-width:500px">
+  <div id="progress-bar" class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="0"
+  aria-valuemin="0" aria-valuemax="100" style="width:1%">
+   Loading Map <span id='current-map-loading'></span> of <span id='total-map-count'></span>
+  </div>
+</div>
 <table class='table' style='max-width:500px'>
 	<tbody>
 	<tr>
