@@ -22,6 +22,8 @@ allowed_maps = {
   'campaign',
   'bud-light-2017-tryouts',
   'ohio-crash-site',
+  'ohio-crash-site-confirm-nor-deny',
+  'ohio-crash-site-restricted-area',
   'gates-of-hell-shipyard',
   'gates-of-hell-city',
   'gates-of-hell-woods',
@@ -113,6 +115,10 @@ elif drl_map == 'bell-labs-trinity-test':
   drl_map_full = 'SP.RC.bell-labs.race-02.TotalTime'
 elif drl_map == 'drl-sandbox-straight-line':
   drl_map_full = 'SP.RC.drl-sandbox.straigh-line.TotalTime'
+elif drl_map == 'ohio-crash-site-confirm-nor-deny':
+  drl_map_full = 'SP.RC.ohio-crash-site.race-01.TotalTime'
+elif drl_map == 'ohio-crash-site-restricted-area':
+  drl_map_full = 'SP.RC.ohio-crash-site.race-02.TotalTime'
 else:
   drl_map_full = 'SP.RC.' + drl_map + '.race.TotalTime'
 
